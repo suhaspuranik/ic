@@ -29,11 +29,25 @@ export const iConnect_create_survey_web = async (surveyPayload) => {
     description: surveyPayload.description || "",
     questions: surveyPayload.questions || [],
     status: surveyPayload.status || "Draft",
-    booth_type: boothType,
-    ward_id: surveyPayload.ward_id || surveyPayload.wardId || null,
-    booth_id: surveyPayload.booth_id || surveyPayload.boothId || null,
-    deadline: rawDeadline,
   };
+
+  // Only include targeting fields and deadline when NOT saving a draft
+  const statusLower = String(payload.status || "").toLowerCase();
+  const isDraft = statusLower === "draft";
+  if (!isDraft) {
+    if (boothType != null && boothType !== "") {
+      payload.booth_type = boothType;
+    }
+    if (surveyPayload.ward_id || surveyPayload.wardId) {
+      payload.ward_id = surveyPayload.ward_id || surveyPayload.wardId;
+    }
+    if (surveyPayload.booth_id || surveyPayload.boothId) {
+      payload.booth_id = surveyPayload.booth_id || surveyPayload.boothId;
+    }
+    if (rawDeadline != null && rawDeadline !== "") {
+      payload.deadline = rawDeadline;
+    }
+  }
 
   console.log(
     "iConnect_create_survey_web payload:",
