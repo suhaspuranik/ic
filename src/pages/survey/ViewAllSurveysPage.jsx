@@ -8,6 +8,7 @@ const ViewAllSurveysPage = () => {
 
   // Filter states
   const [filters, setFilters] = useState({
+    search: "",
     boothType: "",
     dateFrom: "",
     dateTo: "",
@@ -86,6 +87,7 @@ const ViewAllSurveysPage = () => {
 
   const resetFilters = () => {
     setFilters({
+      search: "",
       boothType: "",
       dateFrom: "",
       dateTo: "",
@@ -95,6 +97,10 @@ const ViewAllSurveysPage = () => {
 
   // Apply filters to surveys
   const filteredSurveys = surveys.filter((survey) => {
+    // Search by name
+    if (filters.search && !survey.name.toLowerCase().includes(filters.search.toLowerCase())) {
+      return false;
+    }
     // Filter by booth type
     if (
       filters.boothType &&
@@ -185,15 +191,36 @@ const ViewAllSurveysPage = () => {
             ),
     };
 
-    const editable = (survey.status || "").toLowerCase() === "draft";
-    navigate("/survey-preview", { state: { surveyData, editable } });
+    const isDraft = (survey.status || "").toLowerCase() === "draft";
+    if (isDraft) {
+      navigate("/create-survey", { state: { surveyData } });
+    } else {
+      navigate("/survey-preview", { state: { surveyData, editable: false } });
+    }
   };
 
   return (
     <div className="pt-0 px-8">
       {/* Filters */}
       <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div>
+            <label
+              htmlFor="search"
+              className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
+            >
+              Search
+            </label>
+            <input
+              id="search"
+              name="search"
+              type="text"
+              value={filters.search}
+              onChange={handleFilterChange}
+              placeholder="Search surveys..."
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+            />
+          </div>
           <div>
             <label
               htmlFor="boothType"
@@ -346,7 +373,9 @@ const ViewAllSurveysPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]">
-                      {survey.responses}
+                      {typeof survey.eligible === "number" && survey.eligible > 0
+                        ? `${survey.responses}/${survey.eligible}`
+                        : `${survey.responses}/${survey.eligible ?? 0}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
