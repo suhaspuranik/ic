@@ -128,9 +128,16 @@ const SurveyDashboardPage = () => {
     }));
 
     const surveyData = {
+      id: raw.survey_id || raw.id || raw.ID,
       name: survey.name || raw.title || raw.name || "",
       description: raw.description || "",
       questions: normalizedQuestions,
+      createdDate: survey.createdDate || raw.created_at || raw.created_date || raw.createdAt || raw.createdOn || raw.created || "",
+      deadline: survey.deadline || raw.deadline || raw.due_date || raw.expiry_date || "",
+      targetBooth: survey.targetBooth || raw.target_booth || raw.targetBooth || raw.target || raw.target_booth_type || "All",
+      status: survey.status || raw.status || "Draft",
+      responses: typeof survey.responses === "number" ? survey.responses : Number(raw.responses ?? raw.response_count ?? raw.responses_count ?? 0),
+      eligible: typeof survey.eligible === "number" ? survey.eligible : Number(raw.eligible_workers_count ?? raw.eligibleWorkersCount ?? raw.eligible_workers ?? raw.eligible ?? 0),
     };
 
     const editable = (survey.status || "").toLowerCase() === "draft";

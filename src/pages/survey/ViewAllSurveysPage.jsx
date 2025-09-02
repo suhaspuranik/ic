@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { iConnect_get_survey_details_web } from "../../apis/SurveyApis";
 
 const ViewAllSurveysPage = () => {
@@ -15,6 +16,7 @@ const ViewAllSurveysPage = () => {
 
   // User role state (for demonstration)
   const [userRole] = useState("Assembly Head"); // or 'Ward President'
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSurveys = async () => {
@@ -133,6 +135,58 @@ const ViewAllSurveysPage = () => {
   const handleDownload = (surveyId, type) => {
     console.log(`Download ${type} results for survey ${surveyId}`);
     alert(`Downloading ${type} results for survey ${surveyId}`);
+  };
+
+  const openSurvey = (survey) => {
+    const raw = survey.raw || {};
+    let questions = [];
+    try {
+      if (typeof raw.questions === "string") {
+        questions = JSON.parse(raw.questions || "[]");
+      } else if (Array.isArray(raw.questions)) {
+        questions = raw.questions;
+      }
+    } catch (e) {
+      console.warn("Failed to parse survey questions", e);
+      questions = [];
+    }
+
+    const normalizedQuestions = questions.map((q, idx) => ({
+      id: q.question_id || q.id || Date.now() + idx,
+      text: q.question_text || q.text || "",
+      type: q.question_type || q.type || "radio",
+      options: (q.options || []).map((op) => op.option_text || op.text || "") || [],
+    }));
+
+    const surveyData = {
+      id: survey.id || raw.survey_id || raw.id || raw.ID,
+      name: survey.name || raw.title || raw.name || "",
+      description: raw.description || "",
+      questions: normalizedQuestions,
+      createdDate:
+        survey.createdDate || raw.created_at || raw.created_date || raw.createdAt || raw.createdOn || raw.created || "",
+      deadline: survey.deadline || raw.deadline || raw.due_date || raw.expiry_date || "",
+      targetBooth:
+        survey.targetBooth || raw.target_booth || raw.targetBooth || raw.target || raw.target_booth_type || "All",
+      status: survey.status || raw.status || "Draft",
+      responses:
+        typeof survey.responses === "number"
+          ? survey.responses
+          : Number(raw.responses ?? raw.response_count ?? raw.responses_count ?? 0),
+      eligible:
+        typeof survey.eligible === "number"
+          ? survey.eligible
+          : Number(
+              raw.eligible_workers_count ??
+                raw.eligibleWorkersCount ??
+                raw.eligible_workers ??
+                raw.eligible ??
+                0
+            ),
+    };
+
+    const editable = (survey.status || "").toLowerCase() === "draft";
+    navigate("/survey-preview", { state: { surveyData, editable } });
   };
 
   return (
@@ -257,7 +311,16 @@ const ViewAllSurveysPage = () => {
                 </tr>
               ) : filteredSurveys.length > 0 ? (
                 filteredSurveys.map((survey) => (
-                  <tr key={survey.id}>
+                  <tr
+                    key={survey.id}
+                    onClick={() => openSurvey(survey)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") openSurvey(survey);
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    className="hover:bg-gray-50 cursor-pointer"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">
                       {survey.name}
                     </td>
@@ -289,6 +352,7 @@ const ViewAllSurveysPage = () => {
                       <div className="flex space-x-2">
                         <a
                           href={`/survey-results/${survey.id}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="text-blue-600 hover:text-blue-900"
                         >
                           View Results
