@@ -141,3 +141,20 @@ export const iConnect_get_all_booths_web = async (query = {}) => {
     }
     return [];
 };
+
+/**
+ * Fetch survey results for a given survey id
+ * query: { survey_id }
+ * Expected shape is backend-defined; we normalize in the caller.
+ */
+export const iConnect_get_survey_results_web = async (query = {}) => {
+    const payload = {
+        stage: DEFAULT_STAGE,
+        survey_id: String(query.survey_id || query.id || ""),
+        party_worker_id: String(query.party_worker_id || sessionStorage.getItem("party_worker_id") || "0"),
+        ...query,
+    };
+
+    const response = await apiClient.post("/iConnect_get_survey_results_web", payload);
+    return response.data;
+};

@@ -1,99 +1,86 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { iConnect_get_survey_results_web } from "../../apis/SurveyApis";
 
 const SurveyResultsPage = () => {
-  // In a real application, you would fetch this data based on the survey ID from URL params
-  const [surveyData] = useState({
-    id: 1,
-    name: "Voter Satisfaction Survey",
-    createdDate: "2023-06-15",
-    targetBooth: "All",
-    status: "Completed",
-    totalResponses: 245,
-    questions: [
-      {
-        id: 1,
-        text: "How satisfied are you with the current infrastructure in your area?",
-        type: "radio",
-        options: [
-          "Very Satisfied",
-          "Satisfied",
-          "Neutral",
-          "Dissatisfied",
-          "Very Dissatisfied",
-        ],
-      },
-      {
-        id: 2,
-        text: "Which of the following issues need immediate attention?",
-        type: "checkbox",
-        options: [
-          "Roads",
-          "Water Supply",
-          "Electricity",
-          "Sanitation",
-          "Public Transport",
-          "Healthcare",
-        ],
-      },
-      {
-        id: 3,
-        text: "How likely are you to vote in the upcoming elections?",
-        type: "radio",
-        options: [
-          "Very Likely",
-          "Likely",
-          "Undecided",
-          "Unlikely",
-          "Very Unlikely",
-        ],
-      },
-    ],
+  const { id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [surveyData, setSurveyData] = useState({
+    id,
+    name: "",
+    createdDate: "",
+    targetBooth: "",
+    status: "",
+    totalResponses: 0,
+    questions: [],
   });
+  const [boothData, setBoothData] = useState([]);
+  const [questionResponses, setQuestionResponses] = useState({});
 
-  // Sample booth-wise response data
-  const [boothData] = useState([
-    {
-      boothId: 1,
-      boothName: "Booth 101 - Central",
-      responses: 78,
-      type: "Strong",
-    },
-    { boothId: 2, boothName: "Booth 102 - North", responses: 45, type: "Weak" },
-    {
-      boothId: 3,
-      boothName: "Booth 103 - South",
-      responses: 62,
-      type: "Strong",
-    },
-    { boothId: 4, boothName: "Booth 104 - East", responses: 35, type: "Swing" },
-    { boothId: 5, boothName: "Booth 105 - West", responses: 25, type: "Weak" },
-  ]);
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        setLoading(true);
+        const party_worker_id = sessionStorage.getItem("party_worker_id") || "0";
+        const res = await iConnect_get_survey_results_web({ survey_id: id, party_worker_id });
+        // Normalize based on flexible backend shapes
+        const details = res.details || res.survey || res.meta || res || {};
+        const booths = res.booths || res.boothWise || res.participation || [];
+        const questions = res.questions || res.questionWise || [];
+        const responses = res.responses || res.responseMap || {};
 
-  // Sample response data for each question
-  const [questionResponses] = useState({
-    1: {
-      "Very Satisfied": 45,
-      Satisfied: 98,
-      Neutral: 56,
-      Dissatisfied: 32,
-      "Very Dissatisfied": 14,
-    },
-    2: {
-      Roads: 156,
-      "Water Supply": 178,
-      Electricity: 89,
-      Sanitation: 134,
-      "Public Transport": 112,
-      Healthcare: 98,
-    },
-    3: {
-      "Very Likely": 132,
-      Likely: 67,
-      Undecided: 28,
-      Unlikely: 12,
-      "Very Unlikely": 6,
-    },
-  });
+        const normalizedQuestions = (questions || []).map((q, idx) => ({
+          id: q.id || q.question_id || idx + 1,
+          text: q.text || q.question_text || "",
+          type: (q.type || q.question_type || "radio").toLowerCase(),
+          options: q.options || q.choices || [],
+        }));
+
+        const normalizedBooths = (booths || []).map((b, idx) => ({
+          boothId: b.id || b.booth_id || idx + 1,
+          boothName: b.name || b.booth_name || b.booth || `Booth ${idx + 1}`,
+          responses: Number(b.responses || b.count || 0),
+          type: b.type || b.booth_type || "",
+        }));
+
+        const normalizedResponseMap = {};
+        if (Array.isArray(responses)) {
+          responses.forEach((r) => {
+            const qid = r.question_id || r.id;
+            if (!normalizedResponseMap[qid]) normalizedResponseMap[qid] = {};
+            const option = r.option || r.choice || r.option_text || "";
+            const count = Number(r.count || r.value || 0);
+            normalizedResponseMap[qid][option] = count;
+          });
+        } else if (typeof responses === "object" && responses) {
+          Object.keys(responses).forEach((qid) => {
+            const map = responses[qid] || {};
+            const norm = {};
+            Object.keys(map).forEach((opt) => (norm[opt] = Number(map[opt] || 0)));
+            normalizedResponseMap[qid] = norm;
+          });
+        }
+
+        setSurveyData({
+          id,
+          name: details.title || details.name || "",
+          createdDate: details.created_at || details.createdDate || details.created || "",
+          targetBooth: details.target_booth || details.targetBooth || details.target || "",
+          status: details.status || "",
+          totalResponses: Number(details.total_responses || details.totalResponses || 0),
+          questions: normalizedQuestions,
+        });
+        setBoothData(normalizedBooths);
+        setQuestionResponses(normalizedResponseMap);
+      } catch (err) {
+        console.error("Failed to fetch survey results", err);
+        setSurveyData((s) => ({ ...s, name: s.name || "Survey Results" }));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchResults();
+  }, [id]);
 
   // Generate random colors for chart segments
   const generateColors = (count) => {
@@ -242,9 +229,9 @@ const SurveyResultsPage = () => {
                     {booth.responses}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]">
-                    {Math.round(
-                      (booth.responses / surveyData.totalResponses) * 100
-                    )}
+                    {surveyData.totalResponses > 0
+                      ? Math.round((booth.responses / surveyData.totalResponses) * 100)
+                      : 0}
                     %
                   </td>
                 </tr>
@@ -260,7 +247,9 @@ const SurveyResultsPage = () => {
           Question-wise Results
         </h2>
 
-        {surveyData.questions.map((question) => (
+        {loading ? (
+          <div>Loading results...</div>
+        ) : surveyData.questions.map((question) => (
           <div
             key={question.id}
             className="mb-8 border-b border-gray-200 pb-6 last:border-b-0 last:pb-0"
@@ -273,12 +262,12 @@ const SurveyResultsPage = () => {
               <div>
                 {question.type === "radio" ? (
                   <SimplePieChart
-                    data={questionResponses[question.id]}
+                    data={questionResponses[question.id] || {}}
                     title="Response Distribution"
                   />
                 ) : (
                   <SimpleBarChart
-                    data={questionResponses[question.id]}
+                    data={questionResponses[question.id] || {}}
                     labels={question.options}
                     title="Selected Options"
                   />
@@ -304,10 +293,9 @@ const SurveyResultsPage = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {question.options.map((option) => {
-                      const count = questionResponses[question.id][option] || 0;
-                      const total = Object.values(
-                        questionResponses[question.id]
-                      ).reduce((sum, val) => sum + val, 0);
+                      const counts = questionResponses[question.id] || {};
+                      const count = counts[option] || 0;
+                      const total = Object.values(counts).reduce((sum, val) => sum + val, 0);
                       const percentage = Math.round((count / total) * 100);
 
                       return (
