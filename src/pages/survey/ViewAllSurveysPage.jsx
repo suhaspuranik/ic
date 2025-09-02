@@ -147,22 +147,31 @@ const ViewAllSurveysPage = () => {
     const raw = survey.raw || {};
     let questions = [];
     try {
-      if (typeof raw.questions === "string") {
-        questions = JSON.parse(raw.questions || "[]");
-      } else if (Array.isArray(raw.questions)) {
-        questions = raw.questions;
+      let parsed = raw.questions;
+      if (typeof parsed === "string") parsed = JSON.parse(parsed || "[]");
+      if (Array.isArray(parsed)) questions = parsed;
+      else if (parsed && typeof parsed === "object") {
+        questions = parsed.questions || parsed.question_list || parsed.items || parsed.data || [];
       }
+      if (!Array.isArray(questions)) questions = [];
     } catch (e) {
       console.warn("Failed to parse survey questions", e);
       questions = [];
     }
 
-    const normalizedQuestions = questions.map((q, idx) => ({
-      id: q.question_id || q.id || Date.now() + idx,
-      text: q.question_text || q.text || "",
-      type: q.question_type || q.type || "radio",
-      options: (q.options || []).map((op) => op.option_text || op.text || "") || [],
-    }));
+    const normalizedQuestions = questions.map((q, idx) => {
+      let opts = q.options;
+      if (typeof opts === "string") {
+        try { opts = JSON.parse(opts || "[]"); } catch { opts = []; }
+      }
+      if (!Array.isArray(opts)) opts = [];
+      return {
+        id: q.question_id || q.id || Date.now() + idx,
+        text: q.question_text || q.text || "",
+        type: (q.question_type || q.type || "radio").toLowerCase(),
+        options: opts.map((op) => (typeof op === "string" ? op : (op.option_text || op.text || ""))),
+      };
+    });
 
     const surveyData = {
       id: survey.id || raw.survey_id || raw.id || raw.ID,
