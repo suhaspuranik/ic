@@ -140,8 +140,12 @@ const SurveyDashboardPage = () => {
       eligible: typeof survey.eligible === "number" ? survey.eligible : Number(raw.eligible_workers_count ?? raw.eligibleWorkersCount ?? raw.eligible_workers ?? raw.eligible ?? 0),
     };
 
-    const editable = (survey.status || "").toLowerCase() === "draft";
-    navigate("/survey-preview", { state: { surveyData, editable } });
+    const isDraft = (survey.status || "").toLowerCase() === "draft";
+    if (isDraft) {
+      navigate("/create-survey", { state: { surveyData } });
+    } else {
+      navigate("/survey-preview", { state: { surveyData, editable: false } });
+    }
   };
 
   const formatDate = (dateStr) => {

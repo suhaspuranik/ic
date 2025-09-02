@@ -153,14 +153,7 @@ const CreateSurveyPage = () => {
     }
   }, [submitOptions.wardId]);
 
-  // Enable header Preview button (dispatches a CustomEvent("previewSurvey"))
-  useEffect(() => {
-    const handlePreview = () => {
-      navigate("/survey-preview", { state: { surveyData, editable: true } });
-    };
-    window.addEventListener("previewSurvey", handlePreview);
-    return () => window.removeEventListener("previewSurvey", handlePreview);
-  }, [surveyData, navigate]);
+  // Removed external Preview button support (as per incoming changes)
 
   const handleSurveyChange = (e) => {
     const { name, value } = e.target;
@@ -577,14 +570,6 @@ const CreateSurveyPage = () => {
           <p className="text-sm text-[var(--text-secondary)]">Build questions and configure target audience</p>
         </div>
         <div className="hidden md:flex gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/survey-preview", { state: { surveyData, editable: true } })}
-            className="px-4 py-2 border border-gray-300 text-[var(--text-primary)] rounded-lg hover:bg-gray-50 transition-colors flex items-center"
-          >
-            <span className="material-icons-outlined mr-2 text-base">visibility</span>
-            <span className="align-middle">Preview & Edit</span>
-          </button>
           <button
             type="button"
             onClick={saveDraft}

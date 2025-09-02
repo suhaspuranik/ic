@@ -159,28 +159,13 @@ const LayoutWrapper = ({ children }) => {
     }
     if (path === "/create-survey") {
       return (
-        <div className="flex space-x-3">
-          <button
-            onClick={() => {
-              // Preview functionality
-              const event = new CustomEvent("previewSurvey");
-              window.dispatchEvent(event);
-            }}
-            className="flex items-center px-4 py-2 text-sm font-medium bg-blue-600 text-white border border-blue-600 rounded-lg hover:bg-blue-700 hover:border-blue-700 transition-all duration-200 shadow-sm"
-          >
-            <span className="material-icons-outlined mr-2 text-lg">
-              visibility
-            </span>
-            Preview
-          </button>
-          <button
-            onClick={() => (window.location.href = "/survey-dashboard")}
-            className="flex items-center px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
-          >
-            <span className="material-icons-outlined mr-2 text-lg">close</span>
-            Cancel
-          </button>
-        </div>
+        <button
+          onClick={() => (window.location.href = "/survey-dashboard")}
+          className="flex items-center px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
+        >
+          <span className="material-icons-outlined mr-2 text-lg">close</span>
+          Cancel
+        </button>
       );
     }
     if (path === "/survey-preview") {

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { iConnect_create_survey_web } from "../../apis/SurveyApis";
-import SubmitOptionsModal from "../../components/common/SubmitOptionsModal";
 
 const SurveyPreviewPage = () => {
   const navigate = useNavigate();
@@ -18,7 +17,6 @@ const SurveyPreviewPage = () => {
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ text: "", type: "radio", options: ["", ""] });
 
   const formatDate = (dateStr) => {
@@ -212,22 +210,7 @@ const SurveyPreviewPage = () => {
     }
   };
 
-  const submitSurvey = () => {
-    if (
-      localSurveyData.name.trim() === "" ||
-      localSurveyData.description.trim() === ""
-    ) {
-      showToastMessage("Please fill in survey name and description");
-      return;
-    }
-
-    if (localSurveyData.questions.length === 0) {
-      showToastMessage("Please add at least one question");
-      return;
-    }
-
-    setShowSubmitModal(true);
-  };
+  // Submit removed in preview
 
   // Toast component
   const Toast = ({ message, show }) => (
@@ -544,12 +527,7 @@ const SurveyPreviewPage = () => {
             >
               Save as Draft
             </button>
-            <button
-              onClick={() => setShowSubmitModal(true)}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Submit Survey
-            </button>
+            {/* Submit removed in preview */}
           </div>
         </div>
       ) : (
@@ -568,17 +546,7 @@ const SurveyPreviewPage = () => {
 
       {/* Toast Notification */}
       <Toast message={toastMessage} show={showToast} />
-
-      {/* Submit Options Modal */}
-      <SubmitOptionsModal
-        show={showSubmitModal}
-        onClose={() => setShowSubmitModal(false)}
-        surveyData={localSurveyData}
-        onSuccess={() => {
-          showToastMessage("Survey submitted successfully");
-          setTimeout(() => navigate("/survey-dashboard"), 1500);
-        }}
-      />
+      {/* No submit modal in preview */}
     </div>
   );
 };
