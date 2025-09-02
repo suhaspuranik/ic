@@ -125,14 +125,7 @@ const CreateSurveyPage = () => {
     }
   }, [submitOptions.wardId]);
 
-  // Enable header Preview button (dispatches a CustomEvent("previewSurvey"))
-  useEffect(() => {
-    const handlePreview = () => {
-      navigate("/survey-preview", { state: { surveyData, editable: true } });
-    };
-    window.addEventListener("previewSurvey", handlePreview);
-    return () => window.removeEventListener("previewSurvey", handlePreview);
-  }, [surveyData, navigate]);
+  // Removed external Preview button support
 
   const handleSurveyChange = (e) => {
     const { name, value } = e.target;
@@ -493,14 +486,6 @@ const CreateSurveyPage = () => {
         <div className="hidden md:flex gap-3">
           <button
             type="button"
-            onClick={() => navigate("/survey-preview", { state: { surveyData, editable: true } })}
-            className="px-4 py-2 border border-gray-300 text-[var(--text-primary)] rounded-lg hover:bg-gray-50 transition-colors flex items-center"
-          >
-            <span className="material-icons-outlined mr-2 text-base">visibility</span>
-            <span className="align-middle">Preview & Edit</span>
-          </button>
-          <button
-            type="button"
             onClick={saveDraft}
             className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center"
           >
@@ -627,55 +612,14 @@ const CreateSurveyPage = () => {
           </div>
         </div>
 
-        {/* Right Panel - Live Preview */}
-        <div className="space-y-6">
-          <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 sticky top-4">
-            <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Live Preview ({surveyData.questions.length})</h2>
-            {surveyData.questions.length > 0 ? (
-              <div className="space-y-4">
-                {surveyData.questions.map((question, index) => (
-                  <div key={question.id} className="border border-gray-200 rounded-lg p-4 bg-white">
-                    <div className="flex items-center mb-2">
-                      <h3 className="text-lg font-medium">{index + 1}. {question.text || "Untitled Question"}</h3>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">Type: {question.type === "radio" ? "Single Choice" : "Multiple Choice"}</p>
-                    <ul className="list-disc pl-5">
-                      {question.options.map((option, optIndex) => (
-                        <li key={optIndex} className="text-sm">{option || `Option ${optIndex + 1}`}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No questions added yet</p>
-            )}
-
-            {/* Mobile actions */}
-            <div className="mt-6 flex md:hidden justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => navigate("/survey-preview", { state: { surveyData, editable: true } })}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-[var(--text-primary)] hover:bg-gray-50"
-              >
-                Preview & Edit
-              </button>
-              <button
-                type="button"
-                onClick={saveDraft}
-                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-              >
-                Save Draft
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Right Panel removed (kept single question form only) */}
+        <div></div>
       </div>
 
       {/* Toast Notification */}
       <Toast message={toastMessage} show={showToast} />
 
-      {/* Submit moved to Survey Preview page */}
+      {/* Submit is handled elsewhere */}
     </div>
   );
 };
