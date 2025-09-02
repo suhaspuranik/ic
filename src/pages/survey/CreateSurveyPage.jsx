@@ -125,6 +125,15 @@ const CreateSurveyPage = () => {
     }
   }, [submitOptions.wardId]);
 
+  // Enable header Preview button (dispatches a CustomEvent("previewSurvey"))
+  useEffect(() => {
+    const handlePreview = () => {
+      navigate("/survey-preview", { state: { surveyData, editable: true } });
+    };
+    window.addEventListener("previewSurvey", handlePreview);
+    return () => window.removeEventListener("previewSurvey", handlePreview);
+  }, [surveyData, navigate]);
+
   const handleSurveyChange = (e) => {
     const { name, value } = e.target;
     setSurveyData({
@@ -498,14 +507,6 @@ const CreateSurveyPage = () => {
             <span className="material-icons-outlined mr-2 text-base">save</span>
             <span className="align-middle">Save Draft</span>
           </button>
-          <button
-            type="button"
-            onClick={submitSurvey}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <span className="material-icons-outlined mr-2 text-base">send</span>
-            <span className="align-middle">Submit Survey</span>
-          </button>
         </div>
       </div>
 
@@ -666,13 +667,6 @@ const CreateSurveyPage = () => {
               >
                 Save Draft
               </button>
-              <button
-                type="button"
-                onClick={submitSurvey}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Submit Survey
-              </button>
             </div>
           </div>
         </div>
@@ -681,12 +675,7 @@ const CreateSurveyPage = () => {
       {/* Toast Notification */}
       <Toast message={toastMessage} show={showToast} />
 
-      {/* Submit Options Modal */}
-      <SubmitOptionsModal
-        show={showSubmitOptions}
-        onClose={() => setShowSubmitOptions(false)}
-        onSubmit={handleSubmitSurvey}
-      />
+      {/* Submit moved to Survey Preview page */}
     </div>
   );
 };

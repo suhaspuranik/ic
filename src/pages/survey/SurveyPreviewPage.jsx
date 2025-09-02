@@ -19,6 +19,7 @@ const SurveyPreviewPage = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [newQuestion, setNewQuestion] = useState({ text: "", type: "radio", options: ["", ""] });
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
@@ -108,6 +109,49 @@ const SurveyPreviewPage = () => {
         options: newOptions,
       });
     }
+  };
+
+  const handleNewQuestionChange = (e) => {
+    const { name, value } = e.target;
+    setNewQuestion((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleNewOptionChange = (index, value) => {
+    const options = [...newQuestion.options];
+    options[index] = value;
+    setNewQuestion((prev) => ({ ...prev, options }));
+  };
+
+  const addNewOption = () => {
+    if (newQuestion.options.length < 8) {
+      setNewQuestion((prev) => ({ ...prev, options: [...prev.options, ""] }));
+    }
+  };
+
+  const removeNewOption = (index) => {
+    if (newQuestion.options.length > 2) {
+      setNewQuestion((prev) => ({ ...prev, options: prev.options.filter((_, i) => i !== index) }));
+    }
+  };
+
+  const addNewQuestionToSurvey = () => {
+    if (
+      newQuestion.text.trim() === "" ||
+      newQuestion.options.some((opt) => opt.trim() === "") ||
+      newQuestion.options.length < 2
+    ) {
+      showToastMessage("Please fill in question and at least two options");
+      return;
+    }
+    const q = {
+      id: Date.now(),
+      text: newQuestion.text,
+      type: newQuestion.type,
+      options: [...newQuestion.options],
+    };
+    setLocalSurveyData((prev) => ({ ...prev, questions: [...prev.questions, q] }));
+    setNewQuestion({ text: "", type: "radio", options: ["", ""] });
+    showToastMessage("Question added");
   };
 
   const handleOptionChange = (index, value) => {
@@ -422,6 +466,74 @@ const SurveyPreviewPage = () => {
         </div>
       )}
 
+      {editable && (
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Add New Question</h2>
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Question Text</label>
+              <input
+                type="text"
+                name="text"
+                value={newQuestion.text}
+                onChange={handleNewQuestionChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+                placeholder="Enter your question"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Question Type</label>
+              <select
+                name="type"
+                value={newQuestion.type}
+                onChange={handleNewQuestionChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+              >
+                <option value="radio">Single Choice (Radio)</option>
+                <option value="checkbox">Multiple Choice (Checkbox)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Options ({newQuestion.options.length}/8)</label>
+              {newQuestion.options.map((opt, idx) => (
+                <div key={idx} className="flex items-center mb-2">
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={(e) => handleNewOptionChange(idx, e.target.value)}
+                    className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+                    placeholder={`Option ${idx + 1}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeNewOption(idx)}
+                    className={`${newQuestion.options.length <= 2 ? "text-gray-400 cursor-not-allowed" : "text-red-500 hover:text-red-700"} ml-2 p-2`}
+                    disabled={newQuestion.options.length <= 2}
+                  >
+                    <span className="material-icons-outlined">delete</span>
+                  </button>
+                </div>
+              ))}
+              {newQuestion.options.length < 8 && (
+                <button type="button" onClick={addNewOption} className="mt-2 flex items-center text-blue-600 hover:text-blue-800">
+                  <span className="material-icons-outlined mr-1">add_circle</span>
+                  Add Option
+                </button>
+              )}
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={addNewQuestionToSurvey}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Add Question
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons - editing limited to this page; no return to create for edits */}
       {editable ? (
         <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
@@ -433,7 +545,7 @@ const SurveyPreviewPage = () => {
               Save as Draft
             </button>
             <button
-              onClick={submitSurvey}
+              onClick={() => setShowSubmitModal(true)}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Submit Survey
