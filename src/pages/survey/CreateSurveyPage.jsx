@@ -484,6 +484,14 @@ const CreateSurveyPage = () => {
         <div className="hidden md:flex gap-3">
           <button
             type="button"
+            onClick={() => navigate("/survey-preview", { state: { surveyData, editable: true } })}
+            className="px-4 py-2 border border-gray-300 text-[var(--text-primary)] rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+          >
+            <span className="material-icons-outlined mr-2 text-base">visibility</span>
+            <span className="align-middle">Preview & Edit</span>
+          </button>
+          <button
+            type="button"
             onClick={saveDraft}
             className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center"
           >
@@ -626,16 +634,8 @@ const CreateSurveyPage = () => {
               <div className="space-y-4">
                 {surveyData.questions.map((question, index) => (
                   <div key={question.id} className="border border-gray-200 rounded-lg p-4 bg-white">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center mb-2">
                       <h3 className="text-lg font-medium">{index + 1}. {question.text || "Untitled Question"}</h3>
-                      <div className="flex gap-2">
-                        <button onClick={() => editQuestion(index)} className="text-blue-600 hover:text-blue-800">
-                          <span className="material-icons-outlined">edit</span>
-                        </button>
-                        <button onClick={() => deleteQuestion(index)} className="text-red-600 hover:text-red-800">
-                          <span className="material-icons-outlined">delete</span>
-                        </button>
-                      </div>
                     </div>
                     <p className="text-sm text-gray-600 mb-2">Type: {question.type === "radio" ? "Single Choice" : "Multiple Choice"}</p>
                     <ul className="list-disc pl-5">
@@ -652,6 +652,13 @@ const CreateSurveyPage = () => {
 
             {/* Mobile actions */}
             <div className="mt-6 flex md:hidden justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/survey-preview", { state: { surveyData, editable: true } })}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-[var(--text-primary)] hover:bg-gray-50"
+              >
+                Preview & Edit
+              </button>
               <button
                 type="button"
                 onClick={saveDraft}

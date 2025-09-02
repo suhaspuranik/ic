@@ -379,34 +379,22 @@ const SurveyPreviewPage = () => {
         </div>
       )}
 
-      {/* Action Buttons - only when editable */}
+      {/* Action Buttons - editing limited to this page; no return to create for edits */}
       {editable ? (
         <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-end items-center space-x-3">
             <button
-              onClick={() =>
-                navigate("/create-survey", {
-                  state: { surveyData: localSurveyData },
-                })
-              }
-              className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={saveSurvey}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
-              Continue Editing
+              Save as Draft
             </button>
-            <div className="flex space-x-3">
-              <button
-                onClick={saveSurvey}
-                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                Save as Draft
-              </button>
-              <button
-                onClick={submitSurvey}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Submit Survey
-              </button>
-            </div>
+            <button
+              onClick={submitSurvey}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Submit Survey
+            </button>
           </div>
         </div>
       ) : (
