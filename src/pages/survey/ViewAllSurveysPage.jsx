@@ -1,73 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { iConnect_get_survey_details_web } from "../../apis/SurveyApis";
 
 const ViewAllSurveysPage = () => {
-  // Sample data for demonstration
-  const [surveys] = useState([
-    {
-      id: 1,
-      name: "Voter Satisfaction Survey",
-      createdDate: "2023-06-15",
-      targetBooth: "All",
-      status: "Completed",
-      responses: 245,
-    },
-    {
-      id: 2,
-      name: "Infrastructure Needs",
-      createdDate: "2023-06-10",
-      targetBooth: "Strong",
-      status: "Completed",
-      responses: 189,
-    },
-    {
-      id: 3,
-      name: "Youth Engagement",
-      createdDate: "2023-06-05",
-      targetBooth: "Weak",
-      status: "Pending",
-      responses: 87,
-    },
-    {
-      id: 4,
-      name: "Senior Citizen Needs",
-      createdDate: "2023-06-01",
-      targetBooth: "Swing",
-      status: "Pending",
-      responses: 56,
-    },
-    {
-      id: 5,
-      name: "Education Priorities",
-      createdDate: "2023-05-25",
-      targetBooth: "All",
-      status: "Completed",
-      responses: 312,
-    },
-    {
-      id: 6,
-      name: "Healthcare Access",
-      createdDate: "2023-05-20",
-      targetBooth: "Weak",
-      status: "Completed",
-      responses: 178,
-    },
-    {
-      id: 7,
-      name: "Employment Opportunities",
-      createdDate: "2023-05-15",
-      targetBooth: "Strong",
-      status: "Completed",
-      responses: 203,
-    },
-    {
-      id: 8,
-      name: "Transportation Issues",
-      createdDate: "2023-05-10",
-      targetBooth: "Swing",
-      status: "Completed",
-      responses: 167,
-    },
-  ]);
+  const [surveys, setSurveys] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -79,6 +15,64 @@ const ViewAllSurveysPage = () => {
 
   // User role state (for demonstration)
   const [userRole] = useState("Assembly Head"); // or 'Ward President'
+
+  useEffect(() => {
+    const fetchSurveys = async () => {
+      try {
+        setLoading(true);
+        const party_worker_id = sessionStorage.getItem("party_worker_id") || "0";
+        const data = await iConnect_get_survey_details_web({ party_worker_id });
+        const normalized = (data || []).map((s, idx) => {
+          const responses = Number(s.responses ?? s.response_count ?? s.responses_count ?? 0);
+          const eligible = Number(
+            s.eligible_workers_count ?? s.eligibleWorkersCount ?? s.eligible_workers ?? s.eligible ?? 0
+          );
+          const createdDate = s.created_at || s.created_date || s.createdAt || s.createdOn || s.created || "";
+          const deadline = s.deadline || s.due_date || s.expiry_date || "";
+          const baseStatus = s.status || "Draft";
+          const status = getStatus({ status: baseStatus, deadline });
+          return {
+            id: s.survey_id || s.id || s.ID || idx,
+            name: s.title || s.name || s.survey_name || "Untitled",
+            createdDate,
+            targetBooth: s.target_booth || s.targetBooth || s.target || s.target_booth_type || "All",
+            status,
+            responses,
+            eligible,
+            deadline,
+            raw: s,
+          };
+        });
+        // Sort by createdDate desc
+        normalized.sort((a, b) => {
+          const da = a.createdDate ? Date.parse(a.createdDate) : 0;
+          const db = b.createdDate ? Date.parse(b.createdDate) : 0;
+          return db - da;
+        });
+        setSurveys(normalized);
+      } catch (err) {
+        console.error("Failed to fetch surveys:", err);
+        setSurveys([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSurveys();
+  }, []);
+
+  const isExpired = (deadline) => {
+    if (!deadline) return false;
+    const deadlineDate = Date.parse(deadline);
+    if (Number.isNaN(deadlineDate)) return false;
+    return deadlineDate < Date.now();
+  };
+
+  const getStatus = (survey) => {
+    if ((survey.status || "").toLowerCase() === "completed") return "Completed";
+    if (isExpired(survey.deadline)) return "Expired";
+    return survey.status || "Draft";
+  };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -255,7 +249,13 @@ const ViewAllSurveysPage = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredSurveys.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                    Loading surveys...
+                  </td>
+                </tr>
+              ) : filteredSurveys.length > 0 ? (
                 filteredSurveys.map((survey) => (
                   <tr key={survey.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">
@@ -272,7 +272,11 @@ const ViewAllSurveysPage = () => {
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           survey.status === "Pending"
                             ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
+                            : survey.status === "Completed"
+                            ? "bg-green-100 text-green-800"
+                            : survey.status === "Expired"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
                         {survey.status}
