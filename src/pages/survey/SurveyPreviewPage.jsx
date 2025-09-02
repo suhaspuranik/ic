@@ -20,6 +20,13 @@ const SurveyPreviewPage = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const ts = Date.parse(dateStr);
+    if (Number.isNaN(ts)) return dateStr;
+    return new Date(ts).toLocaleDateString();
+  };
+
   // Debug: Log survey data to verify questions
   useEffect(() => {
     console.log("localSurveyData:", localSurveyData);
@@ -205,6 +212,42 @@ const SurveyPreviewPage = () => {
               {localSurveyData.name}
             </h3>
             <p className="text-blue-700">{localSurveyData.description}</p>
+          </div>
+
+          {/* Metadata */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-4 bg-white rounded-lg border border-gray-200">
+              <p className="text-sm text-[var(--text-secondary)]">Created Date</p>
+              <p className="text-base font-medium text-[var(--text-primary)]">
+                {formatDate(localSurveyData.createdDate)}
+              </p>
+            </div>
+            <div className="p-4 bg-white rounded-lg border border-gray-200">
+              <p className="text-sm text-[var(--text-secondary)]">Deadline</p>
+              <p className="text-base font-medium text-[var(--text-primary)]">
+                {formatDate(localSurveyData.deadline)}
+              </p>
+            </div>
+            <div className="p-4 bg-white rounded-lg border border-gray-200">
+              <p className="text-sm text-[var(--text-secondary)]">Target Booth</p>
+              <p className="text-base font-medium text-[var(--text-primary)]">
+                {localSurveyData.targetBooth || "-"}
+              </p>
+            </div>
+            <div className="p-4 bg-white rounded-lg border border-gray-200">
+              <p className="text-sm text-[var(--text-secondary)]">Status</p>
+              <p className="text-base font-medium text-[var(--text-primary)]">
+                {localSurveyData.status || "-"}
+              </p>
+            </div>
+            <div className="p-4 bg-white rounded-lg border border-gray-200">
+              <p className="text-sm text-[var(--text-secondary)]">Responses</p>
+              <p className="text-base font-medium text-[var(--text-primary)]">
+                {typeof localSurveyData.eligible === "number" && localSurveyData.eligible > 0
+                  ? `${localSurveyData.responses ?? 0}/${localSurveyData.eligible}`
+                  : `${localSurveyData.responses ?? 0}/${localSurveyData.eligible ?? 0}`}
+              </p>
+            </div>
           </div>
         </div>
       </div>
