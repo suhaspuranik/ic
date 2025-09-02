@@ -6,6 +6,8 @@ import {
   getVotersByPage,
   clearVotersStore,
   getVotersCount,
+  getMetaValue,
+  setMetaValue,
 } from "../../utils/indexedDB";
 import { getAllVoterS3Url, getOtherVoterDetails } from "../../apis/VoterApis";
 
@@ -74,56 +76,78 @@ const VoterDetailsPage = () => {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
-  useEffect(() => {
-    const bootstrap = async () => {
-      // Prevent double initialization
-      if (isInitializing.current) {
-        console.log("Bootstrap already in progress, skipping...");
-        return;
+  // Load voters with optional force refresh to bypass cache
+  const loadVoters = async (forceRefresh = false) => {
+    // Prevent double initialization
+    if (isInitializing.current) {
+      console.log("Load already in progress, skipping...");
+      return;
+    }
+
+    isInitializing.current = true;
+    console.log(forceRefresh ? "Starting forced sync..." : "Starting bootstrap process...");
+
+    setLoading(true);
+    const dbInstance = await initDB();
+    setDb(dbInstance);
+
+    // Cache TTL in ms (6 hours)
+    const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+    const lastIngest = await getMetaValue(dbInstance, "voters_last_ingest_ts");
+    const hasRecentCache = !forceRefresh && lastIngest && Date.now() - lastIngest < SIX_HOURS_MS;
+
+    // If we have cache and it is recent, reuse it without refetch
+    const cachedCount = await getVotersCount(dbInstance);
+    if (hasRecentCache && cachedCount > 0) {
+      console.log("Using cached voters from IndexedDB");
+      const firstPage = await getVotersByPage(dbInstance, 1, itemsPerPage);
+      setTotalCount(cachedCount);
+      setPageVoters(firstPage);
+      setCurrentPage(1);
+      setLoading(false);
+      isInitializing.current = false;
+      return;
+    }
+
+    // Otherwise, re-ingest fresh data
+    await clearVotersStore(dbInstance);
+
+    const partyWorkerId = sessionStorage.getItem("party_worker_id") || "1";
+    // Get S3 URL from backend
+    const { s3_url } = await getAllVoterS3Url(partyWorkerId);
+    if (!s3_url) {
+      setLoading(false);
+      isInitializing.current = false;
+      return;
+    }
+
+    const res = await fetch(s3_url);
+    const voterData = await res.json();
+
+    const worker = new Worker(
+      new URL("../../workers/voterWorker.js", import.meta.url)
+    );
+    worker.postMessage(voterData);
+    worker.onmessage = async (event) => {
+      if (event.data.type === "STORE_BATCH") {
+        await addBatchToDB(dbInstance, event.data.data);
       }
-
-      isInitializing.current = true;
-      console.log("Starting bootstrap process...");
-
-      setLoading(true);
-      const dbInstance = await initDB();
-      setDb(dbInstance);
-      // Clear existing store before new ingest
-      await clearVotersStore(dbInstance);
-
-      const partyWorkerId = sessionStorage.getItem("party_worker_id") || "1";
-      // Get S3 URL from backend
-      const { s3_url } = await getAllVoterS3Url(partyWorkerId);
-      if (!s3_url) {
+      if (event.data.type === "DONE") {
+        const count = await getVotersCount(dbInstance);
+        setTotalCount(count);
+        const firstPage = await getVotersByPage(dbInstance, 1, itemsPerPage);
+        setPageVoters(firstPage);
+        setCurrentPage(1);
+        await setMetaValue(dbInstance, "voters_last_ingest_ts", Date.now());
         setLoading(false);
         isInitializing.current = false;
-        return;
+        console.log(forceRefresh ? "Sync completed!" : "Bootstrap process completed!");
       }
-
-      const res = await fetch(s3_url);
-      const voterData = await res.json();
-
-      const worker = new Worker(
-        new URL("../../workers/voterWorker.js", import.meta.url)
-      );
-      worker.postMessage(voterData);
-      worker.onmessage = async (event) => {
-        if (event.data.type === "STORE_BATCH") {
-          await addBatchToDB(dbInstance, event.data.data);
-        }
-        if (event.data.type === "DONE") {
-          const count = await getVotersCount(dbInstance);
-          setTotalCount(count);
-          const firstPage = await getVotersByPage(dbInstance, 1, itemsPerPage);
-          setPageVoters(firstPage);
-          setCurrentPage(1);
-          setLoading(false);
-          isInitializing.current = false;
-          console.log("Bootstrap process completed!");
-        }
-      };
     };
-    bootstrap();
+  };
+
+  useEffect(() => {
+    loadVoters(false);
   }, []);
 
   // Modal functions
@@ -252,6 +276,30 @@ const VoterDetailsPage = () => {
                 {filteredVoters.length.toLocaleString()}
               </p>
             </div>
+          </div>
+        </div>
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-sky-100">
+                <span className="material-icons-outlined text-sky-600">sync</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-[var(--text-secondary)]">Data Sync</p>
+                <p className="text-xs text-[var(--text-secondary)]">Refresh from source (6h cache)</p>
+              </div>
+            </div>
+            <button
+              onClick={() => loadVoters(true)}
+              disabled={loading}
+              className={`px-3 py-2 text-sm font-medium rounded-md ${
+                loading
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-sky-600 text-white hover:bg-sky-700"
+              }`}
+            >
+              {loading ? "Syncing..." : "Sync Now"}
+            </button>
           </div>
         </div>
       </div>

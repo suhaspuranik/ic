@@ -1,13 +1,17 @@
 import { openDB } from "idb";
 
 export const initDB = async () => {
-  return openDB("VoterDB", 4, {
-    upgrade(db) {
-      // Recreate store and use voter_id as the key (do not display on UI)
-      if (db.objectStoreNames.contains("voters")) {
-        db.deleteObjectStore("voters");
+  return openDB("VoterDB", 5, {
+    upgrade(db, oldVersion) {
+      // Ensure voters store exists with voter_id as the key
+      if (!db.objectStoreNames.contains("voters")) {
+        db.createObjectStore("voters", { keyPath: "voter_id" });
       }
-      db.createObjectStore("voters", { keyPath: "voter_id" });
+      // Lightweight meta store for timestamps and cache metadata
+      if (!db.objectStoreNames.contains("meta")) {
+        db.createObjectStore("meta");
+      }
+      // If upgrading from legacy versions that created and wiped stores, keep data intact going forward
     },
   });
 };
@@ -66,6 +70,19 @@ export const getVotersCount = async (db) => {
   const count = await tx.store.count();
   await tx.done;
   return count;
+};
+
+export const getMetaValue = async (db, key) => {
+  const tx = db.transaction("meta", "readonly");
+  const val = await tx.store.get(key);
+  await tx.done;
+  return val;
+};
+
+export const setMetaValue = async (db, key, value) => {
+  const tx = db.transaction("meta", "readwrite");
+  await tx.store.put(value, key);
+  await tx.done;
 };
 
 
