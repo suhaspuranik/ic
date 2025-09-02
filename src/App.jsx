@@ -26,6 +26,7 @@ import SurveyResultsPage from "./pages/survey/SurveyResultsPage";
 
 // Reports Module
 import ReportsDashboardPage from "./pages/reports/ReportsDashboardPage";
+import IssuesPage from "./pages/issues/IssuesPage";
 
 // Booth Worker Module
 import BoothWorkersPage from "./pages/booth/BoothWorkersPage";
@@ -96,6 +97,8 @@ const LayoutWrapper = ({ children }) => {
         return "Voter Details";
       case "/reports":
         return "Reports Dashboard";
+      case "/issues":
+        return "Issues";
       case "/predictive-analysis":
         return "Predictive Analysis";
       case "/historical-votes":
@@ -273,6 +276,9 @@ function App() {
 
           {/* Reports Module */}
           <Route path="/reports" element={<ReportsDashboardPage />} />
+
+          {/* Issues Module */}
+          <Route path="/issues" element={<IssuesPage />} />
 
           {/* Booth Worker Module */}
           <Route path="/booth-workers" element={<BoothWorkersPage />} />

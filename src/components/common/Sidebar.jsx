@@ -73,6 +73,11 @@ const Sidebar = ({ sidebarOpen, toggleSidebar }) => {
               icon: "summarize",
               label: "Reports",
             },
+            {
+              href: "/issues",
+              icon: "report_problem",
+              label: "Issues",
+            },
           ].map(({ href, icon, label }, i) => (
             <li key={i} className="mb-2">
               <a
