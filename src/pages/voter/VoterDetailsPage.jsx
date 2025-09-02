@@ -6,6 +6,8 @@ import {
   getVotersByPage,
   clearVotersStore,
   getVotersCount,
+  getMetaValue,
+  setMetaValue,
 } from "../../utils/indexedDB";
 import { getAllVoterS3Url, getOtherVoterDetails } from "../../apis/VoterApis";
 
@@ -88,7 +90,26 @@ const VoterDetailsPage = () => {
       setLoading(true);
       const dbInstance = await initDB();
       setDb(dbInstance);
-      // Clear existing store before new ingest
+
+      // Cache TTL in ms (e.g., 24h)
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+      const lastIngest = await getMetaValue(dbInstance, "voters_last_ingest_ts");
+      const hasRecentCache = lastIngest && Date.now() - lastIngest < ONE_DAY_MS;
+
+      // If we have cache and it is recent, reuse it without refetch
+      const cachedCount = await getVotersCount(dbInstance);
+      if (hasRecentCache && cachedCount > 0) {
+        console.log("Using cached voters from IndexedDB");
+        const firstPage = await getVotersByPage(dbInstance, 1, itemsPerPage);
+        setTotalCount(cachedCount);
+        setPageVoters(firstPage);
+        setCurrentPage(1);
+        setLoading(false);
+        isInitializing.current = false;
+        return;
+      }
+
+      // Otherwise, re-ingest fresh data
       await clearVotersStore(dbInstance);
 
       const partyWorkerId = sessionStorage.getItem("party_worker_id") || "1";
@@ -117,6 +138,7 @@ const VoterDetailsPage = () => {
           const firstPage = await getVotersByPage(dbInstance, 1, itemsPerPage);
           setPageVoters(firstPage);
           setCurrentPage(1);
+          await setMetaValue(dbInstance, "voters_last_ingest_ts", Date.now());
           setLoading(false);
           isInitializing.current = false;
           console.log("Bootstrap process completed!");
