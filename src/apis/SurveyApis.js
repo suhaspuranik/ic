@@ -12,11 +12,31 @@ export const iConnect_create_survey_web = async (surveyPayload) => {
         description: surveyPayload.description || "",
         questions: surveyPayload.questions || [],
         status: surveyPayload.status || "Draft",
-        target_booth_type: surveyPayload.target_booth_type || surveyPayload.targetBoothType || null,
-        ward_id: surveyPayload.ward_id || surveyPayload.wardId || null,
-        booth_id: surveyPayload.booth_id || surveyPayload.boothId || null,
-        due_date: surveyPayload.due_date || surveyPayload.deadline || null,
     };
+
+    const statusLower = String(payload.status || "").toLowerCase();
+    const isDraft = statusLower === "draft";
+
+    // Only include targeting fields and due_date when NOT saving a draft
+    if (!isDraft) {
+        const targetBoothType = surveyPayload.target_booth_type || surveyPayload.targetBoothType;
+        const wardId = surveyPayload.ward_id || surveyPayload.wardId;
+        const boothId = surveyPayload.booth_id || surveyPayload.boothId;
+        const dueDate = surveyPayload.due_date || surveyPayload.deadline;
+
+        if (targetBoothType != null && targetBoothType !== "") {
+            payload.target_booth_type = targetBoothType;
+        }
+        if (wardId != null && wardId !== "") {
+            payload.ward_id = wardId;
+        }
+        if (boothId != null && boothId !== "") {
+            payload.booth_id = boothId;
+        }
+        if (dueDate != null && dueDate !== "") {
+            payload.due_date = dueDate;
+        }
+    }
 
     console.log("iConnect_create_survey_web payload:", payload);
     const response = await apiClient.post("/iConnect_create_survey_web", payload);
