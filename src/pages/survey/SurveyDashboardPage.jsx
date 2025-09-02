@@ -327,7 +327,7 @@ const SurveyDashboardPage = () => {
                   </td>
                 </tr>
               ) : (
-                recentSurveys.map((survey, index) => (
+                recentSurveys.slice(0, 10).map((survey, index) => (
                   <tr
                     key={index}
                     onClick={() => openSurvey(survey)}
