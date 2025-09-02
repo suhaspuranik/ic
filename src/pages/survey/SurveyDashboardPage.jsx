@@ -393,6 +393,11 @@ const SurveyDashboardPage = () => {
             </tbody>
           </table>
         </div>
+        {recentSurveys.length > 10 && (
+          <div className="mt-4 text-right">
+            <a href="/view-surveys" className="text-blue-600 hover:text-blue-800 text-sm">View All</a>
+          </div>
+        )}
       </div>
     </div>
   );
