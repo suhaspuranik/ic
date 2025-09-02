@@ -476,225 +476,204 @@ const CreateSurveyPage = () => {
 
   return (
     <div className="pt-0 px-8">
-      {/* Survey Details Form */}
-      <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">
-          Survey Details
-        </h2>
-        <div className="grid grid-cols-1 gap-6">
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-            >
-              Survey Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={surveyData.name}
-              onChange={handleSurveyChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
-              placeholder="Enter survey name"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-            >
-              Description / Objective
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={surveyData.description}
-              onChange={handleSurveyChange}
-              rows="3"
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
-              placeholder="Describe the purpose of this survey"
-            ></textarea>
-          </div>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Create Survey</h1>
+          <p className="text-sm text-[var(--text-secondary)]">Build questions and configure target audience</p>
+        </div>
+        <div className="hidden md:flex gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/survey-preview", { state: { surveyData, editable: true } })}
+            className="px-4 py-2 border border-gray-300 text-[var(--text-primary)] rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+          >
+            <span className="material-icons-outlined mr-2 text-base">visibility</span>
+            <span className="align-middle">Preview & Edit</span>
+          </button>
+          <button
+            type="button"
+            onClick={saveDraft}
+            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center"
+          >
+            <span className="material-icons-outlined mr-2 text-base">save</span>
+            <span className="align-middle">Save Draft</span>
+          </button>
+          <button
+            type="button"
+            onClick={submitSurvey}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          >
+            <span className="material-icons-outlined mr-2 text-base">send</span>
+            <span className="align-middle">Submit Survey</span>
+          </button>
         </div>
       </div>
 
-      {/* Questions List */}
-      <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">
-          Questions ({surveyData.questions.length})
-        </h2>
-        {surveyData.questions.length > 0 ? (
-          <div className="space-y-4 mb-6">
-            {surveyData.questions.map((question, index) => (
-              <div
-                key={question.id}
-                className="border border-gray-200 rounded-lg p-4 bg-white"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-medium">
-                    {index + 1}. {question.text || "Untitled Question"}
-                  </h3>
-                  <div className="flex gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Survey Details */}
+          <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Survey Details</h2>
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Survey Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={surveyData.name}
+                  onChange={handleSurveyChange}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+                  placeholder="Enter survey name"
+                />
+              </div>
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Description / Objective</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={surveyData.description}
+                  onChange={handleSurveyChange}
+                  rows="3"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+                  placeholder="Describe the purpose of this survey"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          {/* Add/Edit Question Form */}
+          <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">{editingQuestionIndex !== null ? "Edit Question" : "Add New Question"}</h2>
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <label htmlFor="questionText" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Question Text</label>
+                <input
+                  type="text"
+                  id="questionText"
+                  name="text"
+                  value={currentQuestion.text}
+                  onChange={handleQuestionChange}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+                  placeholder="Enter your question"
+                />
+              </div>
+              <div>
+                <label htmlFor="questionType" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Question Type</label>
+                <select
+                  id="questionType"
+                  name="type"
+                  value={currentQuestion.type}
+                  onChange={handleQuestionChange}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+                >
+                  <option value="radio">Single Choice (Radio)</option>
+                  <option value="checkbox">Multiple Choice (Checkbox)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Options ({currentQuestion.options.length}/8)</label>
+                {currentQuestion.options.map((option, index) => (
+                  <div key={index} className="flex items-center mb-2">
+                    <input
+                      type="text"
+                      value={option}
+                      onChange={(e) => handleOptionChange(index, e.target.value)}
+                      className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+                      placeholder={`Option ${index + 1}`}
+                    />
                     <button
-                      onClick={() => editQuestion(index)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <span className="material-icons-outlined">edit</span>
-                    </button>
-                    <button
-                      onClick={() => deleteQuestion(index)}
-                      className="text-red-600 hover:text-red-800"
+                      type="button"
+                      onClick={() => removeOption(index)}
+                      className={`${currentQuestion.options.length <= 2 ? "text-gray-400 cursor-not-allowed" : "text-red-500 hover:text-red-700"} ml-2 p-2`}
+                      disabled={currentQuestion.options.length <= 2}
                     >
                       <span className="material-icons-outlined">delete</span>
                     </button>
                   </div>
-                </div>
-                <p className="text-sm text-gray-600 mb-2">
-                  Type: {question.type === "radio" ? "Single Choice" : "Multiple Choice"}
-                </p>
-                <ul className="list-disc pl-5">
-                  {question.options.map((option, optIndex) => (
-                    <li key={optIndex} className="text-sm">
-                      {option || `Option ${optIndex + 1}`}
-                    </li>
-                  ))}
-                </ul>
+                ))}
+                {currentQuestion.options.length < 8 && (
+                  <button type="button" onClick={addOption} className="mt-3 flex items-center text-blue-600 hover:text-blue-800">
+                    <span className="material-icons-outlined mr-1">add_circle</span>
+                    Add Option
+                  </button>
+                )}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 mb-4">No questions added yet</p>
-        )}
-      </div>
-
-      {/* Add/Edit Question Form */}
-      <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">
-          {editingQuestionIndex !== null ? "Edit Question" : "Add New Question"}
-        </h2>
-        <div className="grid grid-cols-1 gap-6">
-          <div>
-            <label
-              htmlFor="questionText"
-              className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-            >
-              Question Text
-            </label>
-            <input
-              type="text"
-              id="questionText"
-              name="text"
-              value={currentQuestion.text}
-              onChange={handleQuestionChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
-              placeholder="Enter your question"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="questionType"
-              className="block text-sm font-medium text-[var(--text-secondary)] mb-1"
-            >
-              Question Type
-            </label>
-            <select
-              id="questionType"
-              name="type"
-              value={currentQuestion.type}
-              onChange={handleQuestionChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
-            >
-              <option value="radio">Single Choice (Radio)</option>
-              <option value="checkbox">Multiple Choice (Checkbox)</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-              Options ({currentQuestion.options.length}/8)
-            </label>
-            {currentQuestion.options.map((option, index) => (
-              <div key={index} className="flex items-center mb-2">
-                <input
-                  type="text"
-                  value={option}
-                  onChange={(e) => handleOptionChange(index, e.target.value)}
-                  className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
-                  placeholder={`Option ${index + 1}`}
-                />
+              <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => removeOption(index)}
-                  className={`ml-2 p-2 ${
-                    currentQuestion.options.length <= 2
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-red-500 hover:text-red-700"
-                  }`}
-                  disabled={currentQuestion.options.length <= 2}
+                  onClick={addOrUpdateQuestion}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
                 >
-                  <span className="material-icons-outlined">delete</span>
+                  <span className="material-icons-outlined mr-2 text-base">add</span>
+                  <span className="align-middle">{editingQuestionIndex !== null ? "Update Question" : "Add Question"}</span>
                 </button>
+                {editingQuestionIndex !== null && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentQuestion({ text: "", type: "radio", options: ["", ""] });
+                      setEditingQuestionIndex(null);
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center"
+                  >
+                    <span className="material-icons-outlined mr-2 text-base">cancel</span>
+                    <span className="align-middle">Cancel Edit</span>
+                  </button>
+                )}
               </div>
-            ))}
-            {currentQuestion.options.length < 8 && (
-              <button
-                type="button"
-                onClick={addOption}
-                className="mt-3 flex items-center text-blue-600 hover:text-blue-800"
-              >
-                <span className="material-icons-outlined mr-1">add_circle</span>
-                Add Option
-              </button>
-            )}
+            </div>
           </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={addOrUpdateQuestion}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
-            >
-              <span className="material-icons-outlined mr-2 text-base">
-                add
-              </span>
-              <span className="align-middle">
-                {editingQuestionIndex !== null ? "Update Question" : "Add Question"}
-              </span>
-            </button>
-            {editingQuestionIndex !== null && (
+        </div>
+
+        {/* Right Panel - Live Preview */}
+        <div className="space-y-6">
+          <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 sticky top-4">
+            <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Live Preview ({surveyData.questions.length})</h2>
+            {surveyData.questions.length > 0 ? (
+              <div className="space-y-4">
+                {surveyData.questions.map((question, index) => (
+                  <div key={question.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-lg font-medium">{index + 1}. {question.text || "Untitled Question"}</h3>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">Type: {question.type === "radio" ? "Single Choice" : "Multiple Choice"}</p>
+                    <ul className="list-disc pl-5">
+                      {question.options.map((option, optIndex) => (
+                        <li key={optIndex} className="text-sm">{option || `Option ${optIndex + 1}`}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No questions added yet</p>
+            )}
+
+            {/* Mobile actions */}
+            <div className="mt-6 flex md:hidden justify-end gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setCurrentQuestion({ text: "", type: "radio", options: ["", ""] });
-                  setEditingQuestionIndex(null);
-                }}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center"
+                onClick={() => navigate("/survey-preview", { state: { surveyData, editable: true } })}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-[var(--text-primary)] hover:bg-gray-50"
               >
-                <span className="material-icons-outlined mr-2 text-base">
-                  cancel
-                </span>
-                <span className="align-middle">Cancel Edit</span>
+                Preview & Edit
               </button>
-            )}
-            <button
-              type="button"
-              onClick={saveDraft}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center"
-            >
-              <span className="material-icons-outlined mr-2 text-base">
-                save
-              </span>
-              <span className="align-middle">Save Draft</span>
-            </button>
-            <button
-              type="button"
-              onClick={submitSurvey}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-            >
-              <span className="material-icons-outlined mr-2 text-base">
-                send
-              </span>
-              <span className="align-middle">Submit Survey</span>
-            </button>
+              <button
+                type="button"
+                onClick={saveDraft}
+                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+              >
+                Save Draft
+              </button>
+              <button
+                type="button"
+                onClick={submitSurvey}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Submit Survey
+              </button>
+            </div>
           </div>
         </div>
       </div>

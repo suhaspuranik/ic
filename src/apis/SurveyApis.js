@@ -52,38 +52,28 @@ export const iConnect_get_survey_details_web = async (query = {}) => {
 export const iConnect_update_expired_surveys_web = async (payload = {}) => {
     const surveyIds = Array.isArray(payload.survey_ids)
         ? payload.survey_ids.map(id => Number(id)).filter(id => !isNaN(id) && id !== null && id !== "")
-        : [];
+        : (payload.survey_id != null ? [Number(payload.survey_id)] : []);
 
     if (surveyIds.length === 0) {
         console.warn("No valid survey IDs provided to iConnect_update_expired_surveys_web");
         return [];
     }
 
-    const results = [];
-    for (const surveyId of surveyIds) {
-        const requestPayload = {
-            stage: DEFAULT_STAGE,
-            party_worker_id: String(payload.party_worker_id || sessionStorage.getItem("party_worker_id") || "0"),
-            survey_id: surveyId,
-        };
+    const requestPayload = {
+        stage: DEFAULT_STAGE,
+        party_worker_id: String(payload.party_worker_id || sessionStorage.getItem("party_worker_id") || "0"),
+        survey_ids: surveyIds,
+    };
 
-        console.log("iConnect_update_expired_surveys_web payload for survey_id:", surveyId, requestPayload);
-        try {
-            const response = await apiClient.post("/iConnect_update_expired_surveys_web", requestPayload);
-            console.log("iConnect_update_expired_surveys_web response for survey_id:", surveyId, response.data);
-            const data = response.data;
-            if (data) {
-                if (Array.isArray(data)) results.push(...data);
-                else if (Array.isArray(data.items)) results.push(...data.items);
-                else if (Array.isArray(data.RESULT)) results.push(...data.RESULT);
-                else results.push(data);
-            }
-        } catch (err) {
-            console.error(`Failed to update survey_id ${surveyId}:`, err.response?.data || err.message);
-        }
-    }
-
-    return results;
+    console.log("iConnect_update_expired_surveys_web batch payload:", requestPayload);
+    const response = await apiClient.post("/iConnect_update_expired_surveys_web", requestPayload);
+    console.log("iConnect_update_expired_surveys_web batch response:", response.data);
+    const data = response.data;
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.items)) return data.items;
+    if (Array.isArray(data.RESULT)) return data.RESULT;
+    return [data];
 };
 
 /**
