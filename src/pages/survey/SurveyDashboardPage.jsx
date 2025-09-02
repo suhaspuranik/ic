@@ -134,7 +134,16 @@ const SurveyDashboardPage = () => {
     };
 
     const editable = (survey.status || "").toLowerCase() === "draft";
-    navigate("/survey-preview", { state: { surveyData, editable } });
+    const meta = {
+      createdDate: survey.createdDate || raw.created_at || raw.created_date || "",
+      deadline: survey.deadline || raw.due_date || raw.expiry_date || "",
+      targetBooth: survey.targetBooth || survey.target_booth || survey.target || raw.target_booth_type || raw.target_booth || "All",
+      status: survey.status || raw.status || "",
+      responses: survey.responses ?? 0,
+      eligible: survey.eligible ?? 0,
+      raw,
+    };
+    navigate("/survey-preview", { state: { surveyData, editable, meta } });
   };
 
   const formatDate = (dateStr) => {

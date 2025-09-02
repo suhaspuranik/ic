@@ -12,6 +12,7 @@ const SurveyPreviewPage = () => {
     questions: [],
   };
   const editable = !!location.state?.editable;
+  const meta = location.state?.meta || null;
 
   const [localSurveyData, setLocalSurveyData] = useState(surveyData);
   const [expandedQuestions, setExpandedQuestions] = useState(new Set());
@@ -196,15 +197,51 @@ const SurveyPreviewPage = () => {
     <div className="pt-0 px-8">
       {/* Survey Details */}
       <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">
-          Survey Preview
-        </h2>
-        <div className="grid grid-cols-1 gap-6">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 className="text-xl font-semibold text-blue-900 mb-2">
-              {localSurveyData.name}
-            </h3>
-            <p className="text-blue-700">{localSurveyData.description}</p>
+        <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Survey Preview</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              {editable ? (
+                <>
+                  <input
+                    type="text"
+                    value={localSurveyData.name}
+                    onChange={(e) => setLocalSurveyData({ ...localSurveyData, name: e.target.value })}
+                    className="w-full p-2 mb-2 text-xl font-semibold text-blue-900 bg-white border border-blue-200 rounded-md focus:outline-none focus:border-blue-500"
+                    placeholder="Survey title"
+                  />
+                  <textarea
+                    value={localSurveyData.description}
+                    onChange={(e) => setLocalSurveyData({ ...localSurveyData, description: e.target.value })}
+                    className="w-full p-2 text-blue-800 bg-white border border-blue-200 rounded-md focus:outline-none focus:border-blue-500"
+                    rows="3"
+                    placeholder="Survey description"
+                  />
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-semibold text-blue-900 mb-2">{localSurveyData.name}</h3>
+                  <p className="text-blue-700">{localSurveyData.description}</p>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Survey Info</h4>
+              <div className="space-y-1 text-sm text-[var(--text-secondary)]">
+                <div><span className="font-medium">Status:</span> {meta?.status || "-"}</div>
+                <div><span className="font-medium">Created:</span> {meta?.createdDate || "-"}</div>
+                <div><span className="font-medium">Deadline:</span> {meta?.deadline || "-"}</div>
+                <div><span className="font-medium">Target Booth:</span> {meta?.targetBooth || "-"}</div>
+                {typeof meta?.responses !== "undefined" && (
+                  <div><span className="font-medium">Responses:</span> {meta.responses}</div>
+                )}
+                {typeof meta?.eligible !== "undefined" && (
+                  <div><span className="font-medium">Eligible:</span> {meta.eligible}</div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
